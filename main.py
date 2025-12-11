@@ -3,6 +3,7 @@ from src.game import SnakeGame
 from src.controllers import KeyboardController
 
 CELL = 20
+TICK_RATE = 10
 
 pygame.init()
 screen = pygame.display.set_mode((400, 400))
@@ -37,6 +38,6 @@ while running:
         pygame.draw.rect(screen, (0, 255, 0), (x * CELL, y * CELL, CELL, CELL))
 
     pygame.display.flip()
-    clock.tick(10)
+    clock.tick(TICK_RATE)
 
 pygame.quit()
