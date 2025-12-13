@@ -10,15 +10,13 @@ class SnakeGame:
         self.reset()
 
     def reset(self):
-        self.snake = deque([(10, 10)])
-        self.direction = (1, 0)
         self.available_positions = {
-            (x, y)
-            for x in range(self.width)
-            for y in range(self.height)
-            if (x, y) not in self.snake
+            (x, y) for x in range(self.width) for y in range(self.height)
         }
         self.spawn_food()
+        self.snake = deque([random.choice(list(self.available_positions))])
+        self.direction = (0, 1) if self.snake[0][1] < self.height // 2 else (0, -1)
+        self.available_positions.remove(self.snake[0])
         self.game_over = False
 
     def spawn_food(self):

@@ -14,11 +14,12 @@ controller = KeyboardController()
 
 running = True
 while running:
-    for event in pygame.event.get():
+    events = pygame.event.get()
+    for event in events:
         if event.type == pygame.QUIT:
             running = False
 
-    direction = controller.get_direction()
+    direction = controller.get_direction(events)
     game.update(direction)
 
     if game.game_over:
