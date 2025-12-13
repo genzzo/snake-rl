@@ -35,7 +35,11 @@ while running:
 
     # snake
     for x, y in game.snake:
-        pygame.draw.rect(screen, (0, 255, 0), (x * CELL, y * CELL, CELL, CELL))
+        pygame.draw.rect(
+            screen,
+            (0, 255, 0) if (x, y) == game.snake[0] else (0, 150, 0),
+            (x * CELL, y * CELL, CELL, CELL),
+        )
 
     pygame.display.flip()
     clock.tick(TICK_RATE)

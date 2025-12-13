@@ -1,11 +1,12 @@
 import pygame
-from typing import List, Tuple
+from typing import List, Tuple, Literal
 from abc import ABC, abstractmethod
 
 
 class ControllerInterface(ABC):
     @abstractmethod
-    def get_direction(self) -> Tuple[int, int] | None:
+    def get_direction(self) -> Tuple[Literal[-1, 0, 1], Literal[-1, 0, 1]] | None:
+        """Return the next direction as (dx, dy) or None if no change."""
         pass
 
 
@@ -29,7 +30,7 @@ class KeyboardController(ControllerInterface):
 
 
 class ReplayController(ControllerInterface):
-    def __init__(self, moves: List[Tuple[int, int]]):
+    def __init__(self, moves: List[Tuple[Literal[-1, 0, 1], Literal[-1, 0, 1]]]):
         """
         moves = list of direction tuples, e.g.:
         [(1,0), (1,0), (0,-1), ...]
