@@ -1,7 +1,6 @@
 import pygame
-from typing import Callable, List
 from enum import Enum
-from src.game import SnakeGame
+from src.game import SnakeGame, SnakeGameUpdateResult
 from src.controllers import KeyboardController
 
 
@@ -13,33 +12,17 @@ class GameType(Enum):
 
 CELL = 20
 TICK_RATE = 10
-CURRENT_GAME_TYPE = GameType.USER
+CURRENT_GAME_TYPE: GameType = GameType.AGENT
 
 
-def run_user_game(
-    game: SnakeGame, events: List[pygame.event.EventType], end_game: Callable[[], None]
-):
-    controller = KeyboardController()
-
-    direction = controller.get_direction(events)
-    game.update(direction)
-
-    if game.game_over:
-        print("GAME OVER")
-        end_game()
-
-
-def main():
+def run_user_game():
     pygame.init()
     screen = pygame.display.set_mode((400, 400))
     clock = pygame.time.Clock()
 
     game = SnakeGame(20, 20)
-    running: bool = True
-
-    def end_game():
-        nonlocal running
-        running = False
+    controller = KeyboardController()
+    running = True
 
     while running:
         events = pygame.event.get()
@@ -47,10 +30,12 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        if CURRENT_GAME_TYPE is GameType.USER:
-            run_user_game(game, events, end_game)
-        else:
-            raise Exception("Game type is currently unsupported")
+        direction = controller.get_direction(events)
+        game.update(direction)
+
+        if game.game_over:
+            print("GAME OVER")
+            running = False
 
         # ---- render ----
         screen.fill((0, 0, 0))
@@ -72,6 +57,77 @@ def main():
         clock.tick(TICK_RATE)
 
     pygame.quit()
+
+
+def run_agent_game(visualize: bool = False):
+    pygame.init()
+    screen = pygame.display.set_mode((400, 400))
+    clock = pygame.time.Clock()
+
+    game = SnakeGame(20, 20)
+    controller = KeyboardController()  # temp until we create agent
+    running = True
+
+    reward = 0
+    frame_iteration = 0
+
+    while running:
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                running = False
+
+        frame_iteration += 1
+        direction = controller.get_direction(events)
+        update_result = game.update(direction)
+
+        if update_result is SnakeGameUpdateResult.ATE_FOOD:
+            reward += 10
+        elif update_result is SnakeGameUpdateResult.GAME_OVER:
+            reward -= 10
+        # snake is not eating and just going around
+        elif frame_iteration > 100 * len(game.snake):
+            reward = -10
+
+        if game.game_over:
+            print(
+                f"GAME OVER. User simulated agent result finished with reward: {reward}"
+            )
+            running = False
+
+        # ---- render ----
+        if visualize:
+            screen.fill((0, 0, 0))
+
+            # food
+            if game.food is not None:
+                fx, fy = game.food
+                pygame.draw.rect(
+                    screen, (255, 0, 0), (fx * CELL, fy * CELL, CELL, CELL)
+                )
+
+            # snake
+            for x, y in game.snake:
+                pygame.draw.rect(
+                    screen,
+                    (0, 255, 0) if (x, y) == game.snake[0] else (0, 150, 0),
+                    (x * CELL, y * CELL, CELL, CELL),
+                )
+
+            pygame.display.flip()
+
+        clock.tick(TICK_RATE)
+
+    pygame.quit()
+
+
+def main():
+    if CURRENT_GAME_TYPE is GameType.USER:
+        run_user_game()
+    elif CURRENT_GAME_TYPE is GameType.AGENT:
+        run_agent_game(True)
+    else:
+        raise Exception("Game type is currently unsupported")
 
 
 if __name__ == "__main__":
