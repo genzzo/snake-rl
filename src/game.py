@@ -1,6 +1,6 @@
 import random
 from collections import deque
-from typing import Tuple, Union, Literal
+from typing import Tuple, Union, Literal, NamedTuple
 from enum import Enum
 
 
@@ -8,6 +8,11 @@ class SnakeGameUpdateResult(Enum):
     GAME_OVER = 0
     ATE_FOOD = 1
     MOVED = 2
+
+
+class Point(NamedTuple):
+    x: int
+    y: int
 
 
 class SnakeGame:
@@ -18,7 +23,7 @@ class SnakeGame:
 
     def reset(self):
         self.available_positions = {
-            (x, y) for x in range(self.width) for y in range(self.height)
+            Point(x, y) for x in range(self.width) for y in range(self.height)
         }
         self._spawn_food()
         self.snake = deque([random.choice(list(self.available_positions))])
@@ -36,14 +41,11 @@ class SnakeGame:
             self.food = None
 
     def _checkCollision(
-        self, head_position: tuple[int, int]
+        self, head: Point
     ) -> Union[tuple[Literal[True], str], tuple[Literal[False], None]]:
-        if (
-            not 0 <= head_position[0] < self.width
-            or not 0 <= head_position[1] < self.height
-        ):
+        if not 0 <= head[0] < self.width or not 0 <= head[1] < self.height:
             return (True, "Snake hit wall")
-        if head_position in self.snake:
+        if head in self.snake:
             return (True, "Snake ate itself")
 
         return (False, None)
@@ -62,7 +64,7 @@ class SnakeGame:
 
         head_x, head_y = self.snake[0]
         dx, dy = self.direction
-        new_head = (head_x + dx, head_y + dy)
+        new_head = Point(head_x + dx, head_y + dy)
 
         (isColliding, collisionReason) = self._checkCollision(new_head)
         if isColliding:
