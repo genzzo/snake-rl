@@ -150,7 +150,7 @@ class AgentController:
         if len(self.memory) > self.batch_size:
             mini_sample = random.sample(self.memory, self.batch_size)
         else:
-            mini_sample = self.memory
+            mini_sample = list(self.memory)
 
         states, actions, rewards, next_states, game_overs = zip(*mini_sample)
         # Convert RelativeAction enums to one-hot encoded vectors
@@ -174,7 +174,7 @@ class AgentController:
         self.epsilon = 80 - self.n_games
         if random.randint(0, 200) < self.epsilon:
             # Random exploration: choose random relative action
-            move = random.randint(0, 2)
+            move: int | float = random.randint(0, 2)
             return RelativeAction(move)
         else:
             # Exploitation: use model prediction
