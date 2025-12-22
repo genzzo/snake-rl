@@ -1,10 +1,14 @@
 import argparse
 from enum import Enum
 
+import matplotlib.pyplot as plt
 import pygame
+from IPython import display
 
-from .controllers import KeyboardController
+from .controllers import AgentController, KeyboardController
 from .game import SnakeGame, SnakeGameUpdateResult
+
+plt.ion()  # type: ignore
 
 
 class GameMode(Enum):
@@ -14,7 +18,7 @@ class GameMode(Enum):
 
 
 CELL = 20
-TICK_RATE = 10
+TICK_RATE = 30
 
 
 def run_user_game() -> None:
@@ -43,9 +47,8 @@ def run_user_game() -> None:
         screen.fill((0, 0, 0))
 
         # food
-        if game.food is not None:
-            fx, fy = game.food
-            pygame.draw.rect(screen, (255, 0, 0), (fx * CELL, fy * CELL, CELL, CELL))
+        fx, fy = game.food
+        pygame.draw.rect(screen, (255, 0, 0), (fx * CELL, fy * CELL, CELL, CELL))
 
         # snake
         for x, y in game.snake:
@@ -63,46 +66,100 @@ def run_user_game() -> None:
 
 def run_agent_game(visualize: bool = False) -> None:
     pygame.init()
-    screen = pygame.display.set_mode((400, 400))
-    clock = pygame.time.Clock()
+    if visualize:
+        screen = pygame.display.set_mode((400, 400))
+        clock = pygame.time.Clock()
+    else:
+        screen = None
+        clock = None
 
     game = SnakeGame(20, 20)
-    controller = KeyboardController()  # temp until we create agent
-    running = True
+    agent = AgentController()
 
-    reward = 0
+    plot_scores: list[float] = []
+    plot_mean_scores: list[float] = []
+    total_score = 0
+    high_score = 0
     frame_iteration = 0
 
+    running = True
+
     while running:
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                running = False
+        # Handle pygame events if visualizing
+        if visualize:
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    running = False
+                    break
 
+            if not running:
+                break
+
+        # Get current state and choose action
+        state_old = agent.get_state(game)
+        relative_action = agent.get_action(state_old)
+        absolute_direction = agent.convert_action_to_direction(relative_action, game.direction)
+
+        # Perform action and get new state
         frame_iteration += 1
-        direction = controller.get_direction(events)
-        update_result = game.update(direction)
+        update_result = game.update(absolute_direction)
 
-        if update_result is SnakeGameUpdateResult.ATE_FOOD:
-            reward += 10
-        elif update_result is SnakeGameUpdateResult.GAME_OVER:
-            reward -= 10
-        # snake is not eating and just going around
+        # Reward system
+        reward = 0
+        if update_result == SnakeGameUpdateResult.ATE_FOOD:
+            reward = 10
+        elif update_result == SnakeGameUpdateResult.GAME_OVER:
+            reward = -10
+        # Penalty if snake takes too long without eating (avoiding infinite loops)
         elif frame_iteration > 100 * len(game.snake):
+            game.game_over = True
             reward = -10
 
-        if game.game_over:
-            print(f"GAME OVER. User simulated agent result finished with reward: {reward}")
-            running = False
+        game_over = game.game_over
+        score = len(game.snake)
+        state_new = agent.get_state(game)
 
-        # ---- render ----
-        if visualize:
+        agent.train_short_memory(state_old, relative_action, reward, state_new, game_over)
+        agent.remember(state_old, relative_action, reward, state_new, game_over)
+
+        if game_over:
+            game.reset()
+            agent.n_games += 1
+            agent.train_long_memory()
+            frame_iteration = 0
+
+            if score > high_score:
+                high_score = score
+
+            print("Game", agent.n_games, "Score", score, "High Score:", high_score)
+
+            plot_scores.append(score)
+            total_score += score
+            mean_score = total_score / agent.n_games
+            plot_mean_scores.append(mean_score)
+
+            display.clear_output(wait=True)
+            display.display(plt.gcf())  # type: ignore
+            plt.clf()
+            plt.title("Training...")  # type: ignore
+            plt.xlabel("Number of Games")  # type: ignore
+            plt.ylabel("Score")  # type: ignore
+            plt.plot(plot_scores)  # type: ignore
+            plt.plot(plot_mean_scores)  # type: ignore
+            plt.ylim(ymin=0)  # type: ignore
+            plt.text(len(plot_scores) - 1, plot_scores[-1], str(plot_scores[-1]))  # type: ignore
+            plt.text(len(plot_mean_scores) - 1, plot_mean_scores[-1], str(plot_mean_scores[-1]))  # type: ignore
+            plt.show(block=False)  # type: ignore
+            plt.pause(0.1)
+
+        # Render if visualization is enabled
+        if visualize and screen is not None and clock is not None:
             screen.fill((0, 0, 0))
 
             # food
-            if game.food is not None:
-                fx, fy = game.food
-                pygame.draw.rect(screen, (255, 0, 0), (fx * CELL, fy * CELL, CELL, CELL))
+            fx, fy = game.food
+            pygame.draw.rect(screen, (255, 0, 0), (fx * CELL, fy * CELL, CELL, CELL))
 
             # snake
             for x, y in game.snake:
@@ -113,8 +170,7 @@ def run_agent_game(visualize: bool = False) -> None:
                 )
 
             pygame.display.flip()
-
-        clock.tick(TICK_RATE)
+            clock.tick(TICK_RATE)
 
     pygame.quit()
 

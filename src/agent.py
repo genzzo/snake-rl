@@ -1,73 +1,30 @@
-from collections import deque
-from typing import Any
-
-from .game import SnakeGame, SnakeGameDirection
-
-MAX_MEMORY = 100_000
-BATCH_SIZE = 1000
-LEARNING_RATE = 0.001
-
-
-class Agent:
-    def __init__(self) -> None:
-        self.n_games = 0
-        self.epsilon = 0  # randomness
-        self.gamme = 0  # discount rate
-        self.memory: deque[int] = deque(maxlen=MAX_MEMORY)
-
-    def get_state(self, game: SnakeGame) -> Any:
-        pass
-
-    def remember(
-        self,
-        state: Any,
-        action: SnakeGameDirection | None,
-        reward: int,
-        next_state: Any,
-        game_over: bool,
-    ) -> None:
-        pass
-
-    def train_long_memory(self) -> None:
-        pass
-
-    def train_short_memory(
-        self,
-        state: Any,
-        action: SnakeGameDirection | None,
-        reward: int,
-        next_state: Any,
-        game_over: bool,
-    ) -> None:
-        pass
-
-    def get_action(self, state: Any) -> SnakeGameDirection | None:
-        pass
+from .controllers import AgentController
+from .game import SnakeGame
 
 
 def train_agent(game: SnakeGame) -> None:
-    # plot_scores: list[float] = []
-    # plot_mean_scores: list[float] = []
-    # total_score = 0
+    plot_scores: list[float] = []
+    plot_mean_scores: list[float] = []
+    total_score = 0
     high_score = 0
 
-    agent = Agent()
+    agent = AgentController()
 
     while True:
         state_old = agent.get_state(game)
 
-        final_move = agent.get_action(state_old)
+        relative_action = agent.get_action(state_old)
+        absolute_direction = agent.convert_action_to_direction(relative_action, game.direction)
 
-        game.update(final_move)
+        game.update(absolute_direction)
+        # TODO: fix reward system
         reward, game_over, score = (0, game.game_over, len(game.snake))
 
         state_new = agent.get_state(game)
 
-        # train short memory
-        agent.train_short_memory(state_old, final_move, reward, state_new, game_over)
+        agent.train_short_memory(state_old, relative_action, reward, state_new, game_over)
 
-        # remember
-        agent.remember(state_old, final_move, reward, state_new, game_over)
+        agent.remember(state_old, relative_action, reward, state_new, game_over)
 
         if game_over:
             # train long term memory, plot results
@@ -77,3 +34,10 @@ def train_agent(game: SnakeGame) -> None:
 
             if score > high_score:
                 high_score = score
+
+            print("Game", agent.n_games, "Score", score, "High Score:", high_score)
+
+            plot_scores.append(score)
+            total_score += score
+            mean_score = total_score / agent.n_games
+            plot_mean_scores.append(mean_score)

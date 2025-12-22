@@ -29,6 +29,8 @@ class SnakeGame:
         self.reset()
 
     def reset(self) -> None:
+        self.game_over: bool = False
+        self.game_over_reason: str | None = None
         self.available_positions = {
             Point(x, y) for x in range(self.width) for y in range(self.height)
         }
@@ -40,8 +42,6 @@ class SnakeGame:
             else SnakeGameDirection.UP
         )
         self.available_positions.remove(self.snake[0])
-        self.game_over = False
-        self.game_over_reason: str | None = None
 
     def _get_movement_tuple_from_direction(self, direction: SnakeGameDirection) -> Tuple[int, int]:
         switcher = {
@@ -53,14 +53,13 @@ class SnakeGame:
         return switcher.get(direction, (0, 0))
 
     def _spawn_food(self) -> None:
-        if self.available_positions:
-            self.food: Point | None = random.choice(list(self.available_positions))
-            self.available_positions.remove(self.food)
-        else:
-            # Snake has filled the entire grid (game won)
-            self.food = None
+        if self.game_over or not self.available_positions:
+            return
 
-    def _check_collision(
+        self.food: Point = random.choice(list(self.available_positions))
+        self.available_positions.remove(self.food)
+
+    def check_collision(
         self, head: Point
     ) -> Union[tuple[Literal[True], str], tuple[Literal[False], None]]:
         if not 0 <= head[0] < self.width or not 0 <= head[1] < self.height:
@@ -83,7 +82,7 @@ class SnakeGame:
         dx, dy = self._get_movement_tuple_from_direction(self.direction)
         new_head = Point(head_x + dx, head_y + dy)
 
-        (is_colliding, collision_reason) = self._check_collision(new_head)
+        (is_colliding, collision_reason) = self.check_collision(new_head)
         if is_colliding:
             self.game_over = True
             self.game_over_reason = collision_reason
