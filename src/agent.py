@@ -1,7 +1,7 @@
 from collections import deque
 from typing import Any
 
-from src.game import SnakeGame, SnakeGameDirection
+from .game import SnakeGame, SnakeGameDirection
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
@@ -15,7 +15,7 @@ class Agent:
         self.gamme = 0  # discount rate
         self.memory: deque[int] = deque(maxlen=MAX_MEMORY)
 
-    def get_state(self, game: SnakeGame):
+    def get_state(self, game: SnakeGame) -> Any:
         pass
 
     def remember(
@@ -25,10 +25,10 @@ class Agent:
         reward: int,
         next_state: Any,
         game_over: bool,
-    ):
+    ) -> None:
         pass
 
-    def train_long_memory(self):
+    def train_long_memory(self) -> None:
         pass
 
     def train_short_memory(
@@ -38,14 +38,14 @@ class Agent:
         reward: int,
         next_state: Any,
         game_over: bool,
-    ):
+    ) -> None:
         pass
 
     def get_action(self, state: Any) -> SnakeGameDirection | None:
         pass
 
 
-def train_agent(game: SnakeGame):
+def train_agent(game: SnakeGame) -> None:
     # plot_scores: list[float] = []
     # plot_mean_scores: list[float] = []
     # total_score = 0

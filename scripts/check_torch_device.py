@@ -1,7 +1,7 @@
 import torch
 
 
-def check_torch_device():
+def check_torch_device() -> torch.device:
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print(f"CUDA is available. Using device: {torch.cuda.get_device_name(device)}")
@@ -15,7 +15,7 @@ def check_torch_device():
     return device
 
 
-def main():
+def main() -> None:
     device = check_torch_device()
     # Example tensor operation to verify device functionality
     x = torch.tensor([1.0, 2.0, 3.0], device=device)

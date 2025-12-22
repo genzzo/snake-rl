@@ -1,22 +1,21 @@
+from abc import ABC, abstractmethod
+from typing import Dict, List, Optional
+
 import pygame
 from pygame.event import Event
-from typing import List, Optional, Dict
-from abc import ABC, abstractmethod
 
-from src.game import SnakeGameDirection
+from .game import SnakeGameDirection
 
 
 class ControllerInterface(ABC):
     @abstractmethod
-    def get_direction(
-        self, events: Optional[List[Event]] = None
-    ) -> SnakeGameDirection | None:
+    def get_direction(self, events: Optional[List[Event]] = None) -> SnakeGameDirection | None:
         """Return the next direction as (dx, dy) or None if no change."""
         pass
 
 
 class KeyboardController(ControllerInterface):
-    def __init__(self):
+    def __init__(self) -> None:
         self.pressed_keys: List[int] = []
         self.key_map: Dict[int, SnakeGameDirection] = {
             pygame.K_UP: SnakeGameDirection.UP,
@@ -25,9 +24,7 @@ class KeyboardController(ControllerInterface):
             pygame.K_RIGHT: SnakeGameDirection.RIGHT,
         }
 
-    def get_direction(
-        self, events: Optional[List[Event]] = None
-    ) -> SnakeGameDirection | None:
+    def get_direction(self, events: Optional[List[Event]] = None) -> SnakeGameDirection | None:
         if events is None:
             events = []
 
@@ -56,9 +53,7 @@ class ReplayController(ControllerInterface):
         self.moves = moves
         self.index = 0
 
-    def get_direction(
-        self, events: Optional[List[Event]] = None
-    ) -> SnakeGameDirection | None:
+    def get_direction(self, events: Optional[List[Event]] = None) -> SnakeGameDirection | None:
         if self.index < len(self.moves):
             direction = self.moves[self.index]
             self.index += 1

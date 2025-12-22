@@ -1,0 +1,7 @@
+scripts to run for typesetting and linting:
+- uv run mypy . 
+- uv run ruff check . --fix
+- uv run ruff format .
+
+to run the main game:
+- uv run python src.main.py

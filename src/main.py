@@ -1,7 +1,9 @@
-import pygame
 from enum import Enum
-from src.game import SnakeGame, SnakeGameUpdateResult
+
+import pygame
+
 from src.controllers import KeyboardController
+from src.game import SnakeGame, SnakeGameUpdateResult
 
 
 class GameType(Enum):
@@ -15,7 +17,7 @@ TICK_RATE = 10
 CURRENT_GAME_TYPE: GameType = GameType.AGENT
 
 
-def run_user_game():
+def run_user_game() -> None:
     pygame.init()
     screen = pygame.display.set_mode((400, 400))
     clock = pygame.time.Clock()
@@ -59,7 +61,7 @@ def run_user_game():
     pygame.quit()
 
 
-def run_agent_game(visualize: bool = False):
+def run_agent_game(visualize: bool = False) -> None:
     pygame.init()
     screen = pygame.display.set_mode((400, 400))
     clock = pygame.time.Clock()
@@ -90,9 +92,7 @@ def run_agent_game(visualize: bool = False):
             reward = -10
 
         if game.game_over:
-            print(
-                f"GAME OVER. User simulated agent result finished with reward: {reward}"
-            )
+            print(f"GAME OVER. User simulated agent result finished with reward: {reward}")
             running = False
 
         # ---- render ----
@@ -102,9 +102,7 @@ def run_agent_game(visualize: bool = False):
             # food
             if game.food is not None:
                 fx, fy = game.food
-                pygame.draw.rect(
-                    screen, (255, 0, 0), (fx * CELL, fy * CELL, CELL, CELL)
-                )
+                pygame.draw.rect(screen, (255, 0, 0), (fx * CELL, fy * CELL, CELL, CELL))
 
             # snake
             for x, y in game.snake:
@@ -121,7 +119,7 @@ def run_agent_game(visualize: bool = False):
     pygame.quit()
 
 
-def main():
+def main() -> None:
     if CURRENT_GAME_TYPE is GameType.USER:
         run_user_game()
     elif CURRENT_GAME_TYPE is GameType.AGENT:

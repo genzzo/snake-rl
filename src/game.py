@@ -1,7 +1,7 @@
 import random
 from collections import deque
-from typing import Tuple, Union, Literal, NamedTuple
 from enum import Enum
+from typing import Literal, NamedTuple, Tuple, Union
 
 
 class SnakeGameUpdateResult(Enum):
@@ -23,12 +23,12 @@ class Point(NamedTuple):
 
 
 class SnakeGame:
-    def __init__(self, width: int = 20, height: int = 20):
+    def __init__(self, width: int = 20, height: int = 20) -> None:
         self.width = width
         self.height = height
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         self.available_positions = {
             Point(x, y) for x in range(self.width) for y in range(self.height)
         }
@@ -41,11 +41,9 @@ class SnakeGame:
         )
         self.available_positions.remove(self.snake[0])
         self.game_over = False
-        self.game_over_reason = None
+        self.game_over_reason: str | None = None
 
-    def _get_movement_tuple_from_direction(
-        self, direction: SnakeGameDirection
-    ) -> Tuple[int, int]:
+    def _get_movement_tuple_from_direction(self, direction: SnakeGameDirection) -> Tuple[int, int]:
         switcher = {
             SnakeGameDirection.UP: (0, -1),
             SnakeGameDirection.RIGHT: (1, 0),
@@ -54,15 +52,15 @@ class SnakeGame:
         }
         return switcher.get(direction, (0, 0))
 
-    def _spawn_food(self):
+    def _spawn_food(self) -> None:
         if self.available_positions:
-            self.food = random.choice(list(self.available_positions))
+            self.food: Point | None = random.choice(list(self.available_positions))
             self.available_positions.remove(self.food)
         else:
             # Snake has filled the entire grid (game won)
             self.food = None
 
-    def _checkCollision(
+    def _check_collision(
         self, head: Point
     ) -> Union[tuple[Literal[True], str], tuple[Literal[False], None]]:
         if not 0 <= head[0] < self.width or not 0 <= head[1] < self.height:
@@ -72,9 +70,7 @@ class SnakeGame:
 
         return (False, None)
 
-    def update(
-        self, new_direction: SnakeGameDirection | None = None
-    ) -> SnakeGameUpdateResult:
+    def update(self, new_direction: SnakeGameDirection | None = None) -> SnakeGameUpdateResult:
         """Game logic only, no controls."""
         if new_direction:
             # prevent reversing into itself
@@ -87,10 +83,10 @@ class SnakeGame:
         dx, dy = self._get_movement_tuple_from_direction(self.direction)
         new_head = Point(head_x + dx, head_y + dy)
 
-        (isColliding, collisionReason) = self._checkCollision(new_head)
-        if isColliding:
+        (is_colliding, collision_reason) = self._check_collision(new_head)
+        if is_colliding:
             self.game_over = True
-            self.game_over_reason = collisionReason
+            self.game_over_reason = collision_reason
             return SnakeGameUpdateResult.GAME_OVER
 
         self.snake.appendleft(new_head)

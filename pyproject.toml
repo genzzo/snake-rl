@@ -10,6 +10,11 @@ dependencies = [
     "torchvision>=0.20.1",
 ]
 
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "ruff>=0.14.10",
+]
 
 [[tool.uv.index]]
 name = "pytorch-cu121"
@@ -31,3 +36,15 @@ torchvision = [
   { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
 ]
 
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
