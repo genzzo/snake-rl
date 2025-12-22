@@ -2,8 +2,8 @@ from enum import Enum
 
 import pygame
 
-from src.controllers import KeyboardController
-from src.game import SnakeGame, SnakeGameUpdateResult
+from .controllers import KeyboardController
+from .game import SnakeGame, SnakeGameUpdateResult
 
 
 class GameType(Enum):
