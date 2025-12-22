@@ -1,7 +1,7 @@
 import random
 from collections import deque
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pygame
@@ -55,7 +55,12 @@ class KeyboardController:
 
 class AgentController:
     def __init__(
-        self, max_memory: int = 100_000, batch_size: int = 1000, learning_rate: float = 0.001
+        self,
+        max_memory: int = 100_000,
+        batch_size: int = 1000,
+        learning_rate: float = 0.001,
+        load_from_checkpoint: bool = True,
+        checkpoint_file: str = "checkpoint.pth",
     ) -> None:
         self.n_games = 0
         self.epsilon = 0  # randomness
@@ -66,6 +71,20 @@ class AgentController:
         self.model = LinearQNet(11, 256, 3)
         self.trainer = QTrainer(self.model, learning_rate=learning_rate, gamma=self.gamma)
         self.batch_size = batch_size
+        self.checkpoint_file = checkpoint_file
+        self.plot_scores: list[float] = []
+        self.plot_mean_scores: list[float] = []
+
+        # Try to load from checkpoint if requested
+        if load_from_checkpoint:
+            try:
+                metadata = self.trainer.load_checkpoint(self.checkpoint_file)
+                self.n_games = metadata["n_games"]
+                self.plot_scores = metadata.get("plot_scores", [])
+                self.plot_mean_scores = metadata.get("plot_mean_scores", [])
+                print(f"Loaded checkpoint: starting from game {self.n_games}")
+            except FileNotFoundError:
+                print(f"No checkpoint found at {checkpoint_file}, starting fresh training")
 
     def get_state(self, game: SnakeGame) -> AgentState:
         boundary_threshold = 20
@@ -189,12 +208,30 @@ class AgentController:
         """Not used for AgentController."""
         return None
 
+    def save_checkpoint(self, high_score: int = 0, **kwargs: Any) -> None:
+        """Save training checkpoint.
+
+        Args:
+            high_score: The highest score achieved so far
+            **kwargs: Additional metadata to save in checkpoint
+        """
+        self.trainer.save_checkpoint(
+            file_name=self.checkpoint_file,
+            n_games=self.n_games,
+            high_score=high_score,
+            plot_scores=self.plot_scores,
+            plot_mean_scores=self.plot_mean_scores,
+            **kwargs,
+        )
+
 
 class ReplayController:
     def __init__(self, moves: List[SnakeGameDirection]):
         """
-        moves = list of direction tuples, e.g.:
-        [(1,0), (1,0), (0,-1), ...]
+        Initialize replay controller with a list of SnakeGameDirection moves.
+
+        Args:
+            moves: List of SnakeGameDirection enums from a recorded replay
         """
         self.moves = moves
         self.index = 0
@@ -207,3 +244,19 @@ class ReplayController:
         else:
             # If replay is done, keep going straight
             return None
+
+    @classmethod
+    def from_replay_file(cls, file_path: str) -> "ReplayController":
+        """Create a ReplayController from a saved replay file.
+
+        Args:
+            file_path: Path to the replay JSON file
+
+        Returns:
+            ReplayController instance loaded with the replay data
+        """
+        from .replay import ReplayRecorder
+
+        _, frames = ReplayRecorder.load(file_path)
+        moves = [SnakeGameDirection(frame.direction) for frame in frames]
+        return cls(moves)
