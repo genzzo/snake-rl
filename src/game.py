@@ -10,6 +10,13 @@ class SnakeGameUpdateResult(Enum):
     MOVED = 2
 
 
+class SnakeGameDirection(Enum):
+    UP = 1
+    RIGHT = 2
+    DOWN = 3
+    LEFT = 4
+
+
 class Point(NamedTuple):
     x: int
     y: int
@@ -27,10 +34,25 @@ class SnakeGame:
         }
         self._spawn_food()
         self.snake = deque([random.choice(list(self.available_positions))])
-        self.direction = (0, 1) if self.snake[0][1] < self.height // 2 else (0, -1)
+        self.direction = (
+            SnakeGameDirection.DOWN
+            if self.snake[0][1] < self.height // 2
+            else SnakeGameDirection.UP
+        )
         self.available_positions.remove(self.snake[0])
         self.game_over = False
         self.game_over_reason = None
+
+    def _get_movement_tuple_from_direction(
+        self, direction: SnakeGameDirection
+    ) -> Tuple[int, int]:
+        switcher = {
+            SnakeGameDirection.UP: (0, -1),
+            SnakeGameDirection.RIGHT: (1, 0),
+            SnakeGameDirection.DOWN: (0, 1),
+            SnakeGameDirection.LEFT: (-1, 0),
+        }
+        return switcher.get(direction, (0, 0))
 
     def _spawn_food(self):
         if self.available_positions:
@@ -51,19 +73,18 @@ class SnakeGame:
         return (False, None)
 
     def update(
-        self, new_direction: Union[Tuple[int, int], None] = None
+        self, new_direction: SnakeGameDirection | None = None
     ) -> SnakeGameUpdateResult:
         """Game logic only, no controls."""
         if new_direction:
             # prevent reversing into itself
-            if (
-                new_direction[0] != -self.direction[0]
-                or new_direction[1] != -self.direction[1]
-            ):
+            new_x, new_y = self._get_movement_tuple_from_direction(new_direction)
+            curr_x, curr_y = self._get_movement_tuple_from_direction(self.direction)
+            if (new_x != -curr_x) or (new_y != -curr_y):
                 self.direction = new_direction
 
         head_x, head_y = self.snake[0]
-        dx, dy = self.direction
+        dx, dy = self._get_movement_tuple_from_direction(self.direction)
         new_head = Point(head_x + dx, head_y + dy)
 
         (isColliding, collisionReason) = self._checkCollision(new_head)

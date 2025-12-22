@@ -1,6 +1,7 @@
 from collections import deque
-from typing import Union, Tuple, Any
-from src.game import SnakeGame
+from typing import Any
+
+from src.game import SnakeGame, SnakeGameDirection
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
@@ -20,7 +21,7 @@ class Agent:
     def remember(
         self,
         state: Any,
-        action: Tuple[int, int] | None,
+        action: SnakeGameDirection | None,
         reward: int,
         next_state: Any,
         game_over: bool,
@@ -33,14 +34,14 @@ class Agent:
     def train_short_memory(
         self,
         state: Any,
-        action: Tuple[int, int] | None,
+        action: SnakeGameDirection | None,
         reward: int,
         next_state: Any,
         game_over: bool,
     ):
         pass
 
-    def get_action(self, state: Any) -> Union[Tuple[int, int], None]:
+    def get_action(self, state: Any) -> SnakeGameDirection | None:
         pass
 
 

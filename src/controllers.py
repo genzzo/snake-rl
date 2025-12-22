@@ -1,14 +1,16 @@
 import pygame
 from pygame.event import Event
-from typing import List, Tuple, Literal, Optional, Dict
+from typing import List, Optional, Dict
 from abc import ABC, abstractmethod
+
+from src.game import SnakeGameDirection
 
 
 class ControllerInterface(ABC):
     @abstractmethod
     def get_direction(
         self, events: Optional[List[Event]] = None
-    ) -> Tuple[Literal[-1, 0, 1], Literal[-1, 0, 1]] | None:
+    ) -> SnakeGameDirection | None:
         """Return the next direction as (dx, dy) or None if no change."""
         pass
 
@@ -16,16 +18,16 @@ class ControllerInterface(ABC):
 class KeyboardController(ControllerInterface):
     def __init__(self):
         self.pressed_keys: List[int] = []
-        self.key_map: Dict[int, Tuple[Literal[-1, 0, 1], Literal[-1, 0, 1]]] = {
-            pygame.K_UP: (0, -1),
-            pygame.K_DOWN: (0, 1),
-            pygame.K_LEFT: (-1, 0),
-            pygame.K_RIGHT: (1, 0),
+        self.key_map: Dict[int, SnakeGameDirection] = {
+            pygame.K_UP: SnakeGameDirection.UP,
+            pygame.K_DOWN: SnakeGameDirection.DOWN,
+            pygame.K_LEFT: SnakeGameDirection.LEFT,
+            pygame.K_RIGHT: SnakeGameDirection.RIGHT,
         }
 
     def get_direction(
         self, events: Optional[List[Event]] = None
-    ) -> Tuple[Literal[-1, 0, 1], Literal[-1, 0, 1]] | None:
+    ) -> SnakeGameDirection | None:
         if events is None:
             events = []
 
@@ -46,7 +48,7 @@ class KeyboardController(ControllerInterface):
 
 
 class ReplayController(ControllerInterface):
-    def __init__(self, moves: List[Tuple[Literal[-1, 0, 1], Literal[-1, 0, 1]]]):
+    def __init__(self, moves: List[SnakeGameDirection]):
         """
         moves = list of direction tuples, e.g.:
         [(1,0), (1,0), (0,-1), ...]
@@ -56,7 +58,7 @@ class ReplayController(ControllerInterface):
 
     def get_direction(
         self, events: Optional[List[Event]] = None
-    ) -> Tuple[Literal[-1, 0, 1], Literal[-1, 0, 1]] | None:
+    ) -> SnakeGameDirection | None:
         if self.index < len(self.moves):
             direction = self.moves[self.index]
             self.index += 1
