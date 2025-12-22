@@ -1,3 +1,4 @@
+import argparse
 from enum import Enum
 
 import pygame
@@ -6,15 +7,14 @@ from .controllers import KeyboardController
 from .game import SnakeGame, SnakeGameUpdateResult
 
 
-class GameType(Enum):
-    USER = 0
-    REPLAY = 1
-    AGENT = 2
+class GameMode(Enum):
+    USER = "user"
+    REPLAY = "replay"
+    AGENT = "agent"
 
 
 CELL = 20
 TICK_RATE = 10
-CURRENT_GAME_TYPE: GameType = GameType.AGENT
 
 
 def run_user_game() -> None:
@@ -120,9 +120,22 @@ def run_agent_game(visualize: bool = False) -> None:
 
 
 def main() -> None:
-    if CURRENT_GAME_TYPE is GameType.USER:
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--game-mode",
+        type=str,
+        choices=[mode.value for mode in GameMode],
+        default=GameMode.AGENT.value,
+        help="Type of game to run: 'user' for user-controlled, 'agent' for AI agent-controlled.",
+    )
+
+    args = parser.parse_args()
+    game_mode = GameMode(args.game_mode)
+
+    if game_mode is GameMode.USER:
         run_user_game()
-    elif CURRENT_GAME_TYPE is GameType.AGENT:
+    elif game_mode is GameMode.AGENT:
         run_agent_game(True)
     else:
         raise Exception("Game type is currently unsupported")

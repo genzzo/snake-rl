@@ -4,4 +4,4 @@ scripts to run for typesetting and linting:
 - uv run ruff format .
 
 to run the main game:
-- uv run python src.main.py
+- uv run -m src.main 
